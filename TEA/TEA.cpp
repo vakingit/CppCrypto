@@ -5,21 +5,14 @@ void TEA::encrypt(uint8_t inp_block[8], uint8_t key_block[16])
 {
 	uint32_t l_inp = 0, r_inp = 0;
 	// split text block into two parts
-	for (int i = 0; i < 4; i++)
-	{ 
-		l_inp |= inp_block[i];
-		l_inp <<= (i==3? 0:8);
-	}
-	for (int i = 4; i < 8; i++)
-	{
-		r_inp |= inp_block[i];
-		r_inp <<= (i==7? 0:8);
-	}
+	for (int i = 0; i < 4; i++) { l_inp |= inp_block[i]; l_inp <<= (i==3? 0:8);	}
+	for (int i = 4; i < 8; i++)	{ r_inp |= inp_block[i]; r_inp <<= (i==7? 0:8);	}
 
-	uint32_t k0 = ((uint32_t*)key_block)[0];
-	uint32_t k1 = ((uint32_t*)key_block)[1];
-	uint32_t k2 = ((uint32_t*)key_block)[2];
-	uint32_t k3 = ((uint32_t*)key_block)[3];
+	uint8_t k0 = 0, k1 = 0, k2 = 0, k3 = 0;
+	for (int i = 0; i < 4; i++) { k0 |= key_block[i]; k0 <<= (i==3? 0:8); }
+	for (int i = 4; i < 8; i++) { k1 |= key_block[i]; k1 <<= (i==7? 0:8); }
+	for (int i = 8; i < 12; i++) { k2 |= key_block[i]; k2 <<= (i==11? 0:8); }
+	for (int i = 12; i < 16; i++) { k3 |= key_block[i]; k3 <<= (i==15? 0:8); }
 
 	for (int i = 1; i <= 32; i++)
 	{		
@@ -40,21 +33,14 @@ void TEA::encrypt(uint8_t inp_block[8], uint8_t key_block[16])
 void TEA::decrypt(uint8_t inp_block[8], uint8_t key_block[16])
 {
 	uint32_t l_inp = 0, r_inp = 0;
-	for (int i = 0; i < 4; i++)
-	{ 
-		l_inp |= inp_block[i];
-		l_inp <<= (i==3?0:8);
-	}
-	for (int i = 4; i < 8; i++)
-	{
-		r_inp |= inp_block[i];
-		r_inp <<= (i==7?0:8);
-	}
+	for (int i = 0; i < 4; i++)	{ l_inp |= inp_block[i]; l_inp <<= (i==3?0:8); }
+	for (int i = 4; i < 8; i++)	{ r_inp |= inp_block[i]; r_inp <<= (i==7?0:8); }
 
-	uint32_t k0 = ((uint32_t*)key_block)[0];
-	uint32_t k1 = ((uint32_t*)key_block)[1];
-	uint32_t k2 = ((uint32_t*)key_block)[2];
-	uint32_t k3 = ((uint32_t*)key_block)[3];
+	uint8_t k0 = 0, k1 = 0, k2 = 0, k3 = 0;
+	for (int i = 0; i < 4; i++) { k0 |= key_block[i]; k0 <<= (i==3? 0:8); }
+	for (int i = 4; i < 8; i++) { k1 |= key_block[i]; k1 <<= (i==7? 0:8); }
+	for (int i = 8; i < 12; i++) { k2 |= key_block[i]; k2 <<= (i==11? 0:8); }
+	for (int i = 12; i < 16; i++) { k3 |= key_block[i]; k3 <<= (i==15? 0:8); }
 
 	for (int i = 32; i >= 1; i--)
 	{
