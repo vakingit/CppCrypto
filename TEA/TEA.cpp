@@ -167,7 +167,10 @@ void TEA::recursive_file_encrypt(std::string path, uint8_t key_block[16])
 	namespace fs = std::experimental::filesystem;
 	for (auto current_path : fs::recursive_directory_iterator(fs::path(path)))
 	{
-		encrypt_file(std::string(current_path.path()), key_block);
+		if (!fs::is_directory(current_path.path()))
+		{
+			encrypt_file(std::string(current_path.path()), key_block);
+		}
 	}
 }
 
@@ -176,7 +179,10 @@ void TEA::recursive_file_decrypt(std::string path, uint8_t key_block[16])
 	namespace fs = std::experimental::filesystem;
 	for (auto current_path : fs::recursive_directory_iterator(fs::path(path)))
 	{
-		decrypt_file(std::string(current_path.path()), key_block);
+		if (!fs::is_directory(current_path.path()))
+		{
+			decrypt_file(std::string(current_path.path()), key_block);
+		}
 	}
 }
 
