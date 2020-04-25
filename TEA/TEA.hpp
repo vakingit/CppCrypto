@@ -1,5 +1,7 @@
 #include <experimental/filesystem>
 #include <inttypes.h>
+#include <fstream>
+#include <cstdlib>
 #include <string>
 
 class TEA
