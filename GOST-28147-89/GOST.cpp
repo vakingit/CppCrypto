@@ -109,40 +109,44 @@ void GOST::encrypt_file(std::string file, uint8_t key_256[32])
 	namespace fs = std::experimental::filesystem;
 	
 	int file_size = fs::file_size(fs::path(file));
-	int curr_size = file_size - (file_size%8) + ((file_size%8==0)?0:8); // alignment
+	int curr_size = file_size - (file_size%8) + ((file_size%8==0)?0:8); // this for size%8==0
+
+	// file size + initialization vector size
+	uint8_t buf[curr_size+8];
+	for (int i = 0; i < file_size; i++) buf[i] = 1;
 	
-	uint8_t buf[curr_size];
-	for (int i = 0; i < file_size; i++) buf[i] = 0;
+	uint8_t init_vector[8];
+	for (int i = 0; i < 8; i++) init_vector[i] = (uint8_t)rand();
+
+	// save initialization vector in buffer
+	for (int i = 0; i < 8; i++)
+	{
+		buf[i] = init_vector[i];
+	}
 	
 	std::ifstream in_file;
 	in_file.open(fs::path(file), std::ios::in | std::ios::binary);
-	
-	bool eof = false;
-	int current_position = 0;
-	while (!eof)
+	in_file.read((char*)(buf+8), file_size); // "+8" to skip an init vector
+	// remove trash from the end after reading the file
+	for (int i = curr_size; i >= file_size; i--) (buf+8)[i] = 1;
+
+	for (int n = 0; n < curr_size; n += 8)
 	{
-		uint8_t byte_block[8] = {1,1,1,1,1,1,1,1};
 		for (int i = 0; i < 8; i++)
 		{
-			byte_block[i] = (uint8_t)in_file.get();
-			if (in_file.eof())
-			{
-				byte_block[i] = 1; // delete EOF char
-				eof = true;
-				break;
-			}
+			(buf+8+n)[i] ^= init_vector[i];
 		}
-		encrypt(byte_block, key_256);
+		encrypt(buf+8+n, key_256);
 		for (int i = 0; i < 8; i++)
 		{
-			buf[current_position++] = byte_block[i];
+			init_vector[i] = (buf+8+n)[i];
 		}
 	}
 	in_file.close();
 
 	std::ofstream out_file;
 	out_file.open(fs::path(file), std::ios::out | std::ios::binary);
-	out_file.write((char*)buf,curr_size);
+	out_file.write((char*)buf,curr_size+8);
 
 	out_file.close();
 }
@@ -153,44 +157,44 @@ void GOST::decrypt_file(std::string file, uint8_t key_256[32])
 	namespace fs = std::experimental::filesystem;
 	
 	int file_size = fs::file_size(fs::path(file));
-	uint8_t buf[file_size];
-	for (int i = 0; i < file_size; i++) buf[i] = 0;
+	uint8_t buf[file_size-8];  // size - initialization vector size
+	for (int i = 0; i < (file_size-8); i++) buf[i] = 1;
 	
+	uint8_t init_vector[8];
+	uint8_t this_ciphertext[8];
+
 	std::ifstream in_file;
 	in_file.open(fs::path(file), std::ios::in | std::ios::binary);
-	
-	bool eof = false;
-	int current_position = 0;
-	while (!eof)
+
+	in_file.read((char*)init_vector, 8); // read init vector
+	in_file.read((char*)buf, file_size-8); // read encrypted text
+
+	for (int n = 0; n < file_size-8; n += 8)
 	{
-		uint8_t byte_block[8] = {1,1,1,1,1,1,1,1};
 		for (int i = 0; i < 8; i++)
 		{
-			byte_block[i] = (uint8_t)in_file.get();
-			if (in_file.eof())
-			{
-				eof = true;
-				break;
-			}
+			// the text will be encrypted, so you need to save it
+			this_ciphertext[i] = (buf+n)[i];
 		}
-		decrypt(byte_block, key_256);
+		decrypt(buf+n, key_256);
 		for (int i = 0; i < 8; i++)
 		{
-			if (eof)
-			{	
-				while (buf[current_position-1] == 1) current_position--; // delete ones
-				break;
-			}
-			buf[current_position++] = byte_block[i];
+			(buf+n)[i] ^= init_vector[i];
+		}
+		for (int i = 0; i < 8; i++)
+		{
+			init_vector[i] = this_ciphertext[i];
 		}
 	}
 	in_file.close();
+	while (buf[file_size-8-1]==1) file_size--;
 
 	std::ofstream out_file;
 	out_file.open(fs::path(file), std::ios::out | std::ios::binary);
-	out_file.write((char*)buf,current_position);
+	out_file.write((char*)buf,file_size-8);
 	out_file.close();
 }
+
 void GOST::encrypt_file(std::string file, std::string key_file_name)
 {
 	// file - file name; key - file name
