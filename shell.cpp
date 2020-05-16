@@ -104,10 +104,6 @@ void cont_exec(vector<string> bash, int index_1, int index_2)
 		}
 		char* args[64];
 		gen_args(bash[index_1],args);
-		for (int i = 0; args[i] != nullptr; i++)
-		{
-			printf("--> %s %d\n",args[i],strlen(args[i]));
-		}
 		dup2(fd[1],1);
 		close(fd[0]);
 		execvp(args[0],args);
