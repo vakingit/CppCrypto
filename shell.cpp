@@ -128,6 +128,20 @@ int main(int argc, char **argv)
 	}
 	comm[index] = '\0';
 	parse_bash(bash, (char*)comm);
-	cont_exec(bash,0,1);
+	if (bash.size()>1)
+		cont_exec(bash,0,1);
+	else
+	{
+		if (fork()==0)
+		{
+			close(1);
+			int file = open("result.out",O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
+			dup2(file,1);
+			char* args[64];
+			gen_args(bash[0],args);
+			execvp(args[0],args);
+		}
+
+	}
     return 0;
 }
