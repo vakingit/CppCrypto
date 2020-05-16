@@ -74,7 +74,7 @@ void cont_exec(vector<string> bash, int index_1, int index_2)
 	signal(SIGCHLD,child);
 	int fd[2];
 	pipe(fd);
-	if (fork()==0)
+	if (fork())
 	{
 		dup2(fd[0],0);
 		close(fd[1]);
@@ -86,7 +86,7 @@ void cont_exec(vector<string> bash, int index_1, int index_2)
 		else
 		{
 			close(1);
-			int file = open("result.out",O_RDWR | O_CREAT | O_TRUNC, S_IRWXU | S_IRWXG | S_IRWXO);
+			int file = open("/home/box/result.out",O_RDWR | O_CREAT | O_TRUNC,0777);
 			dup2(file,1);
 			char* args[64];
 			gen_args(bash[index_2],args);
@@ -111,6 +111,7 @@ void cont_exec(vector<string> bash, int index_1, int index_2)
 }
 int main(int argc, char **argv)
 {	
+	unlink("/home/box/result.out");
 	basepid = getpid();
 	
 	//parse input
@@ -129,7 +130,7 @@ int main(int argc, char **argv)
 	else
 	{
 		close(1);
-		int file = open("result.out",O_RDWR | O_CREAT | O_TRUNC);
+		int file = open("/home/box/result.out",O_RDWR | O_CREAT | O_TRUNC,0777);
 		dup2(file,1);
 		char* args[64];
 		gen_args(bash[0],args);
